@@ -8,13 +8,13 @@ A TypeScript library for parsing and executing dice expressions. Supports variou
 
 ```bash
 # pnpm
-pnpm add @nihilncunia/diceroll-v3
+pnpm add @nihilapp/diceroll-v3
 
 # npm
-npm install @nihilncunia/diceroll-v3
+npm install @nihilapp/diceroll-v3
 
 # yarn
-yarn add @nihilncunia/diceroll-v3
+yarn add @nihilapp/diceroll-v3
 ```
 
 ## 빠른 시작 / Quick Start
@@ -26,7 +26,7 @@ yarn add @nihilncunia/diceroll-v3
 **English:** Can be used with ES module syntax.
 
 ```typescript
-import { rollDiceExpression } from '@nihilncunia/diceroll-v3';
+import { rollDiceExpression } from '@nihilapp/diceroll-v3';
 
 // 단일 주사위식
 const result = rollDiceExpression('d20+5');
@@ -58,7 +58,7 @@ console.log(results);
 **English:** Can also be used with CommonJS syntax.
 
 ```javascript
-const { rollDiceExpression } = require('@nihilncunia/diceroll-v3');
+const { rollDiceExpression } = require('@nihilapp/diceroll-v3');
 
 // 단일 주사위식
 const result = rollDiceExpression('d20+5');
@@ -351,12 +351,39 @@ Only parses the dice expression string (does not execute).
 
 **English:** Splits dice expressions by spaces and returns them as an array.
 
+### 개별 roll 함수 내보내기 / Per-roll function exports
+
+**한국어:** 각 주사위 룰 함수들도 패키지 루트에서 직접 임포트하여 사용할 수 있습니다.
+
+**English:** Each roll rule function is also exported from the package root and can be imported directly.
+
+```typescript
+import {
+  rollBasic,
+  rollExplode,
+  rollKeepHighest,
+  rollKeepLowest,
+  rollDropHighest,
+  rollDropLowest,
+  rollReroll,
+  rollRerollOnce,
+  rollSuccess,
+  rollNetSuccess,
+  rollPercentile,
+  rollFate,
+} from '@nihilapp/diceroll-v3';
+
+const basic = rollBasic(3, 6);
+const exploded = rollExplode(10, 6);
+const kh = rollKeepHighest(4, 6, 3);
+```
+
 ## 예제 / Examples
 
 ### 기본 사용 / Basic Usage
 
 ```typescript
-import { rollDiceExpression } from '@nihilncunia/diceroll-v3';
+import { rollDiceExpression } from '@nihilapp/diceroll-v3';
 
 // D&D 스타일 굴림
 const attack = rollDiceExpression('d20+5');
