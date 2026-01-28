@@ -1,0 +1,71 @@
+{
+  "name": "@nihilapp/diceroll-v3",
+  "version": "3.0.0",
+  "description": "주사위 표현식을 파싱하고 실행하는 TypeScript 라이브러리. 다양한 주사위 굴림 방식을 지원합니다. / A TypeScript library for parsing and executing dice expressions with various rolling methods.",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsup",
+    "lint": "eslint .",
+    "start": "node --experimental-specifier-resolution=node dist/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test:dice": "tsx src/utils/diceRoll.ts",
+    "prepublishOnly": "pnpm build"
+  },
+  "keywords": [
+    "dice",
+    "diceroll",
+    "dice-roller",
+    "rpg",
+    "tabletop",
+    "gaming",
+    "typescript"
+  ],
+  "author": "nihilncunia",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nihilncunia/diceroll-v3.git"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "@stylistic/eslint-plugin": "^5.7.1",
+    "@types/lodash": "^4.17.23",
+    "@types/luxon": "^3.7.1",
+    "@types/node": "^25.0.10",
+    "@types/uuid": "^11.0.0",
+    "eslint": "^9.39.2",
+    "eslint-import-resolver-typescript": "^4.4.4",
+    "eslint-plugin-import-x": "^4.16.1",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "tsup": "^8.5.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.54.0"
+  },
+  "dependencies": {
+    "lodash": "^4.17.23",
+    "luxon": "^3.7.2",
+    "uuid": "^13.0.0"
+  }
+}

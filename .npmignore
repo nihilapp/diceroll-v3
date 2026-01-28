@@ -1,0 +1,42 @@
+# Source files
+src/
+plans/
+results/
+PRD/
+
+# Development files
+*.config.mjs
+tsconfig.json
+tsup.config.ts
+process.d.ts
+pnpm-lock.yaml
+pnpm-workspace.yaml
+scripts/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Git
+.git/
+.gitignore
+
+# Build artifacts (will be included via files field)
+# dist/ is included in package.json files field
+dist/examples/
+
+# Test files
+*.test.ts
+*.spec.ts
+
+# Documentation (except README)
+*.md
+!README.md
+
+# Misc
+.DS_Store
+Thumbs.db
+*.log
