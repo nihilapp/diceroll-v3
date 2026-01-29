@@ -15,20 +15,27 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # pnpm 액션 버전을 v4로 올렸습니다. (v10 지원 안정성 확보)
       - name: Install pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 10
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          registry-url: 'https://registry.npmjs.org'
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
+      # [중요] 빌드 단계가 반드시 필요합니다!
+      - name: Build Project
+        run: pnpm build
+
+      # 버전 변경이 있을 때만 배포하도록 조건(if)을 추가할 수도 있지만,
+      # 지금은 에러를 보더라도 일단 시도하도록 두겠습니다.
       - name: Publish
         run: npm publish --access public
         env:
