@@ -1,6 +1,6 @@
 {
   "name": "@nihilapp/diceroll-v3",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "description": "주사위 표현식을 파싱하고 실행하는 TypeScript 라이브러리. 다양한 주사위 굴림 방식을 지원합니다. / A TypeScript library for parsing and executing dice expressions with various rolling methods.",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
