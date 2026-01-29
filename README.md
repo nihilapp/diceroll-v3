@@ -1,5 +1,11 @@
 # DiceRoll
 
+[![npm version](https://img.shields.io/npm/v/@nihilapp/diceroll-v3.svg?style=flat-square)](https://www.npmjs.com/package/@nihilapp/diceroll-v3)
+[![License](https://img.shields.io/npm/l/@nihilapp/diceroll-v3.svg?style=flat-square)](LICENSE)
+[![Downloads](https://img.shields.io/npm/dm/@nihilapp/diceroll-v3.svg?style=flat-square)](https://www.npmjs.com/package/@nihilapp/diceroll-v3)
+[![Bundle Size](https://img.shields.io/bundlephobia/min/@nihilapp/diceroll-v3?style=flat-square)](https://bundlephobia.com/package/@nihilapp/diceroll-v3)
+[![TypeScript](https://img.shields.io/npm/types/@nihilapp/diceroll-v3?style=flat-square)](https://www.npmjs.com/package/@nihilapp/diceroll-v3)
+
 주사위 표현식을 파싱하고 실행하는 TypeScript 라이브러리입니다. 다양한 주사위 굴림 방식을 지원하며, 블록별로 적절한 roll 함수에 위임하여 계산합니다.
 
 A TypeScript library for parsing and executing dice expressions. Supports various dice rolling methods and delegates calculations to appropriate roll functions block by block.

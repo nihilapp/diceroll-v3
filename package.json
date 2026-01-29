@@ -41,10 +41,10 @@
     "typescript"
   ],
   "author": "nihilncunia",
-  "license": "ISC",
+  "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/nihilncunia/diceroll-v3.git"
+    "url": "https://github.com/nihilapp/diceroll-v3.git"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
