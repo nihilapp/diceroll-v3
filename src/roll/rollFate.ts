@@ -1,4 +1,4 @@
-import { FateDieValue, FateRollResult } from '../types';
+import { FateDieValue, RollFateResult } from '../types';
 
 function rollSingleFateDie(): FateDieValue {
   const faces: readonly FateDieValue[] = [
@@ -17,7 +17,7 @@ function rollSingleFateDie(): FateDieValue {
  * @param count 굴릴 주사위 개수 (기본값: 4)
  * @returns Fate 주사위 굴림 결과
  */
-export function rollFate(count: number = 4): FateRollResult {
+export function rollFate(count: number = 4): RollFateResult {
   const dice: FateDieValue[] = [];
 
   for (let i = 0; i < count; i++) {
@@ -27,6 +27,7 @@ export function rollFate(count: number = 4): FateRollResult {
   const total = dice.reduce((acc, cur) => acc + cur, 0);
 
   return {
+    kind: 'fate',
     dice,
     total,
   };

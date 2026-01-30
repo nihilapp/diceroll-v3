@@ -1,4 +1,4 @@
-import { BasicDiceRollResult, DiceRollResult } from '../types';
+import { DiceRollResult, RollBasicResult } from '../types';
 import { diceRoll } from '../utils/diceRoll';
 
 /**
@@ -7,7 +7,7 @@ import { diceRoll } from '../utils/diceRoll';
  * @param maxNumber 주사위의 최대 눈금 (예: 6이면 1~6)
  * @returns 주사위 굴림 결과
  */
-export function rollBasic(count: number, maxNumber: number): BasicDiceRollResult {
+export function rollBasic(count: number, maxNumber: number): RollBasicResult {
   const rolls: DiceRollResult[] = [];
 
   for (let i = 0; i < count; i++) {
@@ -16,6 +16,7 @@ export function rollBasic(count: number, maxNumber: number): BasicDiceRollResult
   }
 
   return {
+    kind: 'basic',
     minNumber: 1,
     maxNumber,
     rolls,

@@ -1,4 +1,4 @@
-import { DiceRollResult, KeepDropRollResult } from '../types';
+import { DiceRollResult, RollKeepLowestResult } from '../types';
 import { diceRoll } from '../utils/diceRoll';
 
 /**
@@ -13,7 +13,7 @@ export function rollKeepLowest(
   count: number,
   maxNumber: number,
   keepCount: number
-): KeepDropRollResult {
+): RollKeepLowestResult {
   const rolls: DiceRollResult[] = [];
 
   for (let i = 0; i < count; i++) {
@@ -29,6 +29,7 @@ export function rollKeepLowest(
   const total = kept.reduce((acc, cur) => acc + cur.result, 0);
 
   return {
+    kind: 'keepLowest',
     minNumber: 1,
     maxNumber,
     all: rolls,

@@ -84,6 +84,34 @@ export type DiceExpressionLegacyResult = {
 /** 여러 주사위식 실행 결과 (배열) */
 export type DiceExpressionLegacyResults = DiceExpressionLegacyResult[];
 
+/** ---------- roll 함수별 반환 타입 (함수명과 통일, 굴림 유형 kind 포함) ---------- */
+/** 굴림 유형 (DiceBlockRollDetail.kind 및 각 Roll*Result.kind와 동일) */
+export type RollKind
+  = 'basic' | 'compound' | 'explode' | 'keepHighest' | 'keepLowest'
+    | 'dropHighest' | 'dropLowest' | 'reroll' | 'rerollOnce'
+    | 'success' | 'netSuccess' | 'percentile' | 'fate';
+
+export type RollBasicResult = BasicDiceRollResult & { kind: 'basic' };
+export type RollCompoundResult = BasicDiceRollResult & { kind: 'compound' };
+export type RollDropHighestResult = KeepDropRollResult & { kind: 'dropHighest' };
+export type RollDropLowestResult = KeepDropRollResult & { kind: 'dropLowest' };
+export type RollExplodeResult = BasicDiceRollResult & { kind: 'explode' };
+export type RollFateResult = FateRollResult & { kind: 'fate' };
+export type RollKeepHighestResult = KeepDropRollResult & { kind: 'keepHighest' };
+export type RollKeepLowestResult = KeepDropRollResult & { kind: 'keepLowest' };
+export type RollNetSuccessResult = NetSuccessRollResult & { kind: 'netSuccess' };
+export type RollPercentileResult = DiceRollResult & { kind: 'percentile' };
+export type RollRerollResult = BasicDiceRollResult & { kind: 'reroll' };
+export type RollRerollOnceResult = BasicDiceRollResult & { kind: 'rerollOnce' };
+export type RollSuccessResult = SuccessRollResult & { kind: 'success' };
+
+/** 모든 roll 함수 반환 타입의 합집합 (discriminated union) */
+export type RollResult
+  = RollBasicResult | RollCompoundResult | RollDropHighestResult | RollDropLowestResult
+    | RollExplodeResult | RollFateResult | RollKeepHighestResult | RollKeepLowestResult
+    | RollNetSuccessResult | RollPercentileResult | RollRerollResult | RollRerollOnceResult
+    | RollSuccessResult;
+
 /** 보정치 한 항 (부호 + 숫자) */
 export type ModifierEntry = {
   sign: '+' | '-';
@@ -95,14 +123,11 @@ export type DiceBlockRollDetail = {
   /** 원본 블록 문자열 (예: "4d20kl2") */
   block: string;
   /** 블록 종류 (어떤 roll 함수로 계산했는지) */
-  kind: 'basic' | 'compound' | 'explode' | 'keepHighest' | 'keepLowest'
-    | 'dropHighest' | 'dropLowest' | 'reroll' | 'rerollOnce'
-    | 'success' | 'netSuccess' | 'percentile' | 'fate';
+  kind: RollKind;
   /** 이 블록의 합산 기여값 (total 또는 successCount 등) */
   contribution: number;
-  /** 원본 굴림 결과 (BasicDiceRollResult | KeepDropRollResult | FateRollResult 등) */
-  rollResult: BasicDiceRollResult | KeepDropRollResult | FateRollResult
-    | SuccessRollResult | NetSuccessRollResult | DiceRollResult;
+  /** 원본 굴림 결과 (각 Roll*Result, kind 포함) */
+  rollResult: RollResult;
 };
 
 /** 단일 주사위식 실행 결과 (블록 위임 + 보정치 분리) */

@@ -1,4 +1,4 @@
-import { BasicDiceRollResult, DiceRollResult } from '../types';
+import { DiceRollResult, RollRerollResult } from '../types';
 import { diceRoll } from '../utils/diceRoll';
 
 /**
@@ -17,7 +17,7 @@ export function rollReroll(
   maxNumber: number,
   shouldReroll: (result: number) => boolean,
   maxIterations: number = 1000
-): BasicDiceRollResult {
+): RollRerollResult {
   const rolls: DiceRollResult[] = [];
 
   for (let i = 0; i < count; i++) {
@@ -33,6 +33,7 @@ export function rollReroll(
   }
 
   return {
+    kind: 'reroll',
     minNumber: 1,
     maxNumber,
     rolls,

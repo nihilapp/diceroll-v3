@@ -1,4 +1,4 @@
-import { BasicDiceRollResult, DiceRollResult } from '../types';
+import { DiceRollResult, RollExplodeResult } from '../types';
 import { diceRoll } from '../utils/diceRoll';
 
 /**
@@ -18,7 +18,7 @@ export function rollExplode(
   maxNumber: number,
   threshold: number = maxNumber,
   maxIterations: number = 1000
-): BasicDiceRollResult {
+): RollExplodeResult {
   const rolls: DiceRollResult[] = [];
   let iterationCount = 0;
 
@@ -38,6 +38,7 @@ export function rollExplode(
   }
 
   return {
+    kind: 'explode',
     minNumber: 1,
     maxNumber,
     rolls,

@@ -1,4 +1,4 @@
-import { DiceRollResult, KeepDropRollResult } from '../types';
+import { DiceRollResult, RollDropHighestResult } from '../types';
 import { diceRoll } from '../utils/diceRoll';
 
 /**
@@ -13,7 +13,7 @@ export function rollDropHighest(
   count: number,
   maxNumber: number,
   dropCount: number
-): KeepDropRollResult {
+): RollDropHighestResult {
   const rolls: DiceRollResult[] = [];
 
   for (let i = 0; i < count; i++) {
@@ -29,6 +29,7 @@ export function rollDropHighest(
   const total = kept.reduce((acc, cur) => acc + cur.result, 0);
 
   return {
+    kind: 'dropHighest',
     minNumber: 1,
     maxNumber,
     all: rolls,

@@ -1,4 +1,4 @@
-import { DiceRollResult, SuccessRollResult } from '../types';
+import { DiceRollResult, RollSuccessResult } from '../types';
 import { diceRoll } from '../utils/diceRoll';
 
 /**
@@ -15,7 +15,7 @@ export function rollSuccess(
   count: number,
   maxNumber: number,
   isSuccess: (result: number) => boolean
-): SuccessRollResult {
+): RollSuccessResult {
   const rolls: DiceRollResult[] = [];
 
   for (let i = 0; i < count; i++) {
@@ -25,6 +25,7 @@ export function rollSuccess(
   const successCount = rolls.filter((r) => isSuccess(r.result)).length;
 
   return {
+    kind: 'success',
     minNumber: 1,
     maxNumber,
     rolls,

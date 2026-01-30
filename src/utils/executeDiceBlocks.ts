@@ -38,7 +38,7 @@ export function executeBlock(
     return {
       contribution: result.total,
       rollResult: result,
-      kind: 'basic',
+      kind: result.kind,
     };
   }
 
@@ -48,7 +48,7 @@ export function executeBlock(
       return {
         contribution: r.total,
         rollResult: r,
-        kind: 'basic',
+        kind: r.kind,
       };
     }
     case 'compound': {
@@ -56,7 +56,7 @@ export function executeBlock(
       return {
         contribution: r.total,
         rollResult: r,
-        kind: 'compound',
+        kind: r.kind,
       };
     }
     case 'explode': {
@@ -64,7 +64,7 @@ export function executeBlock(
       return {
         contribution: r.total,
         rollResult: r,
-        kind: 'explode',
+        kind: r.kind,
       };
     }
     case 'keepHighest': {
@@ -72,7 +72,7 @@ export function executeBlock(
       return {
         contribution: r.total,
         rollResult: r,
-        kind: 'keepHighest',
+        kind: r.kind,
       };
     }
     case 'keepLowest': {
@@ -80,7 +80,7 @@ export function executeBlock(
       return {
         contribution: r.total,
         rollResult: r,
-        kind: 'keepLowest',
+        kind: r.kind,
       };
     }
     case 'dropHighest': {
@@ -88,7 +88,7 @@ export function executeBlock(
       return {
         contribution: r.total,
         rollResult: r,
-        kind: 'dropHighest',
+        kind: r.kind,
       };
     }
     case 'dropLowest': {
@@ -96,7 +96,7 @@ export function executeBlock(
       return {
         contribution: r.total,
         rollResult: r,
-        kind: 'dropLowest',
+        kind: r.kind,
       };
     }
     case 'reroll': {
@@ -104,7 +104,7 @@ export function executeBlock(
       return {
         contribution: r.total,
         rollResult: r,
-        kind: 'reroll',
+        kind: r.kind,
       };
     }
     case 'rerollOnce': {
@@ -112,7 +112,7 @@ export function executeBlock(
       return {
         contribution: r.total,
         rollResult: r,
-        kind: 'rerollOnce',
+        kind: r.kind,
       };
     }
     case 'success': {
@@ -120,7 +120,7 @@ export function executeBlock(
       return {
         contribution: r.successCount,
         rollResult: r,
-        kind: 'success',
+        kind: r.kind,
       };
     }
     case 'netSuccess': {
@@ -133,7 +133,7 @@ export function executeBlock(
       return {
         contribution: r.total,
         rollResult: r,
-        kind: 'netSuccess',
+        kind: r.kind,
       };
     }
     case 'percentile': {
@@ -141,7 +141,7 @@ export function executeBlock(
       return {
         contribution: r.result,
         rollResult: r,
-        kind: 'percentile',
+        kind: r.kind,
       };
     }
     case 'fate': {
@@ -149,7 +149,7 @@ export function executeBlock(
       return {
         contribution: r.total,
         rollResult: r,
-        kind: 'fate',
+        kind: r.kind,
       };
     }
     default: {

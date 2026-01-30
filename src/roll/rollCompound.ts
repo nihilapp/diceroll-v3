@@ -1,4 +1,4 @@
-import { BasicDiceRollResult, DiceRollResult } from '../types';
+import { DiceRollResult, RollCompoundResult } from '../types';
 import { diceRoll } from '../utils/diceRoll';
 
 /**
@@ -18,7 +18,7 @@ export function rollCompound(
   maxNumber: number,
   threshold: number = maxNumber,
   maxIterations: number = 1000
-): BasicDiceRollResult {
+): RollCompoundResult {
   const rolls: DiceRollResult[] = [];
 
   // 각 주사위를 굴림
@@ -47,6 +47,7 @@ export function rollCompound(
   }
 
   return {
+    kind: 'compound',
     minNumber: 1,
     maxNumber,
     rolls,

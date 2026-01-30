@@ -1,4 +1,4 @@
-import { DiceRollResult, NetSuccessRollResult } from '../types';
+import { DiceRollResult, RollNetSuccessResult } from '../types';
 import { diceRoll } from '../utils/diceRoll';
 
 /**
@@ -17,7 +17,7 @@ export function rollNetSuccess(
   maxNumber: number,
   isSuccess: (result: number) => boolean,
   isFailure: (result: number) => boolean
-): NetSuccessRollResult {
+): RollNetSuccessResult {
   const rolls: DiceRollResult[] = [];
 
   for (let i = 0; i < count; i++) {
@@ -32,6 +32,7 @@ export function rollNetSuccess(
   }
 
   return {
+    kind: 'netSuccess',
     minNumber: 1,
     maxNumber,
     rolls,
