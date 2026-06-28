@@ -49,24 +49,24 @@ const compound2 = rollCompound(1, 4);
 console.log('=== rollCompound(1, 4) -> 1d4!! ===');
 console.log(compound2);
 
-// 예시 9: 1d20r1 (1이 나오면 1이 아닐 때까지 다시 굴림)
+// 예시 9: 1d20rr1 (1이 나오면 1이 아닐 때까지 다시 굴림)
 const reroll1 = rollReroll(1, 20, (r) => r === 1);
-console.log('=== rollReroll(1, 20, r=>r===1) -> 1d20r1 ===');
+console.log('=== rollReroll(1, 20, r=>r===1) -> 1d20rr1 ===');
 console.log(reroll1);
 
-// 예시 10: 1d6r<=2 (1, 2가 나오면 3 이상 나올 때까지 다시 굴림)
+// 예시 10: 1d6rr<=2 (1, 2가 나오면 3 이상이 나올 때까지 다시 굴림)
 const reroll2 = rollReroll(1, 6, (r) => r <= 2);
-console.log('=== rollReroll(1, 6, r=>r<=2) -> 1d6r<=2 ===');
+console.log('=== rollReroll(1, 6, r=>r<=2) -> 1d6rr<=2 ===');
 console.log(reroll2);
 
-// 예시 11: 1d20ro1 (1이 나오면 단 한 번만 다시 굴림)
+// 예시 11: 1d20r1 (1이 나오면 단 한 번만 다시 굴림)
 const rerollOnce1 = rollRerollOnce(1, 20, (r) => r === 1);
-console.log('=== rollRerollOnce(1, 20, r=>r===1) -> 1d20ro1 ===');
+console.log('=== rollRerollOnce(1, 20, r=>r===1) -> 1d20r1 ===');
 console.log(rerollOnce1);
 
-// 예시 12: 2d6ro<2 (1이 나오면 한 번만 다시 굴림)
+// 예시 12: 2d6r<2 (1이 나오면 한 번만 다시 굴림)
 const rerollOnce2 = rollRerollOnce(2, 6, (r) => r < 2);
-console.log('=== rollRerollOnce(2, 6, r=>r<2) -> 2d6ro<2 ===');
+console.log('=== rollRerollOnce(2, 6, r=>r<2) -> 2d6r<2 ===');
 console.log(rerollOnce2);
 
 // 예시 13: 5d10>7 (7을 초과하는 주사위 개수, WoD)

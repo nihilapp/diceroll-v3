@@ -11,10 +11,332 @@ import { rollPercentile } from '../roll/rollPercentile';
 import { rollReroll } from '../roll/rollReroll';
 import { rollRerollOnce } from '../roll/rollRerollOnce';
 import { rollSuccess } from '../roll/rollSuccess';
-import type { DiceBlockRollDetail, ModifierEntry } from '../types';
+import type { DiceBlockRollDetail, DiceRollResult, ModifierEntry, RollResult } from '../types';
 
+import type { ComparisonPredicate, DiceTermSpec } from './diceModifierTypes';
 import type { DiceBlockSpec, ParsedTerm } from './parseDiceBlocks';
 import { parseDiceBlockSpec } from './parseDiceBlocks';
+
+function compare(result: number, predicate: ComparisonPredicate): boolean {
+  if (predicate.op === '=') return result === predicate.value;
+  if (predicate.op === '>') return result > predicate.value;
+  if (predicate.op === '>=') return result >= predicate.value;
+  if (predicate.op === '<') return result < predicate.value;
+  if (predicate.op === '<=') return result <= predicate.value;
+  return false;
+}
+
+function rollSingle(sides: number): DiceRollResult {
+  return rollBasic(1, sides).rolls[0];
+}
+
+function inferKind(spec: DiceTermSpec): DiceBlockRollDetail['kind'] {
+  for (let i = spec.modifiers.length - 1; i >= 0; i--) {
+    const modifier = spec.modifiers[i];
+    switch (modifier.kind) {
+      case 'keepHighest':
+      case 'keepLowest':
+      case 'dropHighest':
+      case 'dropLowest':
+      case 'explode':
+      case 'explodeOnce':
+      case 'compound':
+      case 'rerollOnce':
+        return modifier.kind;
+      case 'rerollRecursive':
+        return 'reroll';
+      case 'countSuccess':
+        return 'success';
+      case 'countFailure':
+      case 'deductFailures':
+      case 'subtractFailureFaces':
+      case 'marginSuccess':
+      case 'countEven':
+      case 'countOdd':
+        return modifier.kind;
+      default:
+        break;
+    }
+  }
+
+  return 'basic';
+}
+
+function executeDiceTermSpec(spec: DiceTermSpec): {
+  contribution: number;
+  rollResult: RollResult;
+  kind: DiceBlockRollDetail['kind'];
+} {
+  let all = rollBasic(spec.count, spec.sides).rolls;
+  let current = [ ...all, ];
+  let dropped: DiceRollResult[] = [];
+
+  for (const modifier of spec.modifiers) {
+    switch (modifier.kind) {
+      case 'rerollOnce': {
+        current = current.map((roll) => compare(roll.result, modifier.predicate)
+          ? rollSingle(spec.sides)
+          : roll);
+        all = [ ...current, ];
+        break;
+      }
+      case 'rerollRecursive': {
+        current = current.map((roll) => {
+          let next = roll;
+          let iterations = 0;
+          while (compare(next.result, modifier.predicate) && iterations < 1000) {
+            next = rollSingle(spec.sides);
+            iterations++;
+          }
+          return next;
+        });
+        all = [ ...current, ];
+        break;
+      }
+      case 'explode': {
+        const nextRolls = [ ...current, ];
+        for (const roll of current) {
+          let probe = roll;
+          let iterations = 0;
+          while (probe.result >= spec.sides && iterations < 1000) {
+            probe = rollSingle(spec.sides);
+            nextRolls.push(probe);
+            iterations++;
+          }
+        }
+        current = nextRolls;
+        all = [ ...current, ];
+        break;
+      }
+      case 'explodeOnce': {
+        const nextRolls = [ ...current, ];
+        for (const roll of current) {
+          if (roll.result >= spec.sides) {
+            nextRolls.push(rollSingle(spec.sides));
+          }
+        }
+        current = nextRolls;
+        all = [ ...current, ];
+        break;
+      }
+      case 'compound': {
+        current = current.map((roll) => {
+          let total = roll.result;
+          let probe = roll;
+          let iterations = 0;
+          while (probe.result >= spec.sides && iterations < 1000) {
+            probe = rollSingle(spec.sides);
+            total += probe.result;
+            iterations++;
+          }
+          return {
+            minNumber: roll.minNumber,
+            maxNumber: roll.maxNumber,
+            result: total,
+            isFumble: roll.isFumble,
+            isCritical: roll.isCritical,
+          };
+        });
+        all = [ ...current, ];
+        break;
+      }
+      case 'keepHighest': {
+        const sorted = [ ...current, ].sort((a, b) => b.result - a.result);
+        current = sorted.slice(0, modifier.count);
+        dropped = sorted.slice(modifier.count);
+        break;
+      }
+      case 'keepLowest': {
+        const sorted = [ ...current, ].sort((a, b) => a.result - b.result);
+        current = sorted.slice(0, modifier.count);
+        dropped = sorted.slice(modifier.count);
+        break;
+      }
+      case 'dropHighest': {
+        const sorted = [ ...current, ].sort((a, b) => b.result - a.result);
+        dropped = sorted.slice(0, modifier.count);
+        current = sorted.slice(modifier.count);
+        break;
+      }
+      case 'dropLowest': {
+        const sorted = [ ...current, ].sort((a, b) => a.result - b.result);
+        dropped = sorted.slice(0, modifier.count);
+        current = sorted.slice(modifier.count);
+        break;
+      }
+      case 'minimum': {
+        current = current.map((roll) => ({
+          ...roll,
+          result: Math.max(modifier.value, roll.result),
+          isFumble: Math.max(modifier.value, roll.result) === roll.minNumber,
+          isCritical: Math.max(modifier.value, roll.result) === roll.maxNumber,
+        }));
+        all = [ ...current, ];
+        break;
+      }
+      case 'maximum': {
+        current = current.map((roll) => ({
+          ...roll,
+          result: Math.min(modifier.value, roll.result),
+          isFumble: Math.min(modifier.value, roll.result) === roll.minNumber,
+          isCritical: Math.min(modifier.value, roll.result) === roll.maxNumber,
+        }));
+        all = [ ...current, ];
+        break;
+      }
+      default:
+        break;
+    }
+  }
+
+  const total = current.reduce((sum, roll) => sum + roll.result, 0);
+  const kind = inferKind(spec);
+  const successModifier = spec.modifiers.find((modifier) => modifier.kind === 'countSuccess');
+  const failureModifier = spec.modifiers.find((modifier) => modifier.kind === 'countFailure');
+  const deductModifier = spec.modifiers.find((modifier) => modifier.kind === 'deductFailures');
+  const subtractModifier = spec.modifiers.find((modifier) => modifier.kind === 'subtractFailureFaces');
+  const marginModifier = spec.modifiers.find((modifier) => modifier.kind === 'marginSuccess');
+  const evenModifier = spec.modifiers.find((modifier) => modifier.kind === 'countEven');
+  const oddModifier = spec.modifiers.find((modifier) => modifier.kind === 'countOdd');
+
+  if (successModifier && successModifier.kind === 'countSuccess') {
+    const successCount = current.filter((roll) => compare(roll.result, successModifier.predicate)).length;
+    return {
+      contribution: successCount,
+      kind: 'success',
+      rollResult: {
+        kind: 'success',
+        minNumber: 1,
+        maxNumber: spec.sides,
+        rolls: current,
+        successCount,
+      },
+    };
+  }
+
+  if (failureModifier && failureModifier.kind === 'countFailure') {
+    const successCount = current.filter((roll) => compare(roll.result, failureModifier.predicate)).length;
+    return {
+      contribution: successCount,
+      kind: 'countFailure',
+      rollResult: {
+        kind: 'countFailure',
+        minNumber: 1,
+        maxNumber: spec.sides,
+        rolls: current,
+        successCount,
+      },
+    };
+  }
+
+  if (deductModifier && deductModifier.kind === 'deductFailures') {
+    const failureCount = current.filter((roll) => compare(roll.result, deductModifier.predicate)).length;
+    return {
+      contribution: -failureCount,
+      kind: 'deductFailures',
+      rollResult: {
+        kind: 'deductFailures',
+        minNumber: 1,
+        maxNumber: spec.sides,
+        rolls: current,
+        successCount: 0,
+        failureCount,
+        total: -failureCount,
+      },
+    };
+  }
+
+  if (subtractModifier && subtractModifier.kind === 'subtractFailureFaces') {
+    const failureSum = current
+      .filter((roll) => compare(roll.result, subtractModifier.predicate))
+      .reduce((sum, roll) => sum + roll.result, 0);
+    return {
+      contribution: total - failureSum,
+      kind: 'subtractFailureFaces',
+      rollResult: {
+        kind: 'subtractFailureFaces',
+        minNumber: 1,
+        maxNumber: spec.sides,
+        rolls: current,
+        total,
+        failureSum,
+      },
+    };
+  }
+
+  if (marginModifier && marginModifier.kind === 'marginSuccess') {
+    return {
+      contribution: total - marginModifier.predicate.value,
+      kind: 'marginSuccess',
+      rollResult: {
+        kind: 'marginSuccess',
+        minNumber: 1,
+        maxNumber: spec.sides,
+        rolls: current,
+        total,
+        target: marginModifier.predicate.value,
+      },
+    };
+  }
+
+  if (evenModifier) {
+    const successCount = current.filter((roll) => roll.result % 2 === 0).length;
+    return {
+      contribution: successCount,
+      kind: 'countEven',
+      rollResult: {
+        kind: 'countEven',
+        minNumber: 1,
+        maxNumber: spec.sides,
+        rolls: current,
+        successCount,
+      },
+    };
+  }
+
+  if (oddModifier) {
+    const successCount = current.filter((roll) => roll.result % 2 === 1).length;
+    return {
+      contribution: successCount,
+      kind: 'countOdd',
+      rollResult: {
+        kind: 'countOdd',
+        minNumber: 1,
+        maxNumber: spec.sides,
+        rolls: current,
+        successCount,
+      },
+    };
+  }
+
+  if (kind === 'keepHighest' || kind === 'keepLowest' || kind === 'dropHighest' || kind === 'dropLowest') {
+    return {
+      contribution: total,
+      kind,
+      rollResult: {
+        kind,
+        minNumber: 1,
+        maxNumber: spec.sides,
+        all,
+        kept: current,
+        dropped,
+        total,
+      },
+    };
+  }
+
+  return {
+    contribution: total,
+    kind,
+    rollResult: {
+      kind,
+      minNumber: 1,
+      maxNumber: spec.sides,
+      rolls: current,
+      total,
+    } as RollResult,
+  };
+}
 
 /**
  * 단일 주사위 블록 스펙을 실행하고, 기여값과 상세 결과 반환
@@ -40,6 +362,10 @@ export function executeBlock(
       rollResult: result,
       kind: result.kind,
     };
+  }
+
+  if ('modifiers' in spec) {
+    return executeDiceTermSpec(spec);
   }
 
   switch (spec.kind) {
@@ -100,7 +426,7 @@ export function executeBlock(
       };
     }
     case 'reroll': {
-      const r = rollReroll(spec.count, spec.sides, spec.predicate);
+      const r = rollReroll(spec.count, spec.sides, (value) => compare(value, spec.predicate));
       return {
         contribution: r.total,
         rollResult: r,
@@ -108,7 +434,7 @@ export function executeBlock(
       };
     }
     case 'rerollOnce': {
-      const r = rollRerollOnce(spec.count, spec.sides, spec.predicate);
+      const r = rollRerollOnce(spec.count, spec.sides, (value) => compare(value, spec.predicate));
       return {
         contribution: r.total,
         rollResult: r,
@@ -116,7 +442,7 @@ export function executeBlock(
       };
     }
     case 'success': {
-      const r = rollSuccess(spec.count, spec.sides, spec.predicate);
+      const r = rollSuccess(spec.count, spec.sides, (value) => compare(value, spec.predicate));
       return {
         contribution: r.successCount,
         rollResult: r,
@@ -127,8 +453,8 @@ export function executeBlock(
       const r = rollNetSuccess(
         spec.count,
         spec.sides,
-        spec.successPred,
-        spec.failurePred
+        (value) => compare(value, spec.successPred),
+        (value) => compare(value, spec.failurePred)
       );
       return {
         contribution: r.total,

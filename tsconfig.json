@@ -4,6 +4,7 @@
     "target": "ES2022",
     "module": "esnext",
     "moduleResolution": "node",
+    "ignoreDeprecations": "6.0",
     "lib": [
       "ES2022"
     ],
@@ -29,6 +30,7 @@
   },
   "include": [
     "src/**/*",
+    "tests/**/*",
     "eslint.config.mjs",
     "process.d.ts"
   ],

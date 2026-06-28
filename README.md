@@ -138,6 +138,19 @@ rollDiceExpression('5d10!>8');    // 9, 10이 나오면 주사위 추가
 
 **English:** Use the `!` suffix. You can specify a threshold with `!>N` format.
 
+### FVTT Explode (x/xo)
+
+Foundry VTT 스타일 explode 문법도 지원합니다.
+
+```typescript
+rollDiceExpression('1d6x');      // 폭발 굴림
+rollDiceExpression('1d6xo');     // 한 번만 폭발
+```
+
+**한국어:** 기존 `!`, `!!` 문법은 유지되며 `x`, `xo`와 병행 지원됩니다.
+
+**English:** Legacy `!`, `!!` syntax is preserved and can be used alongside `x`, `xo`.
+
 ### Keep Highest/Lowest (kh/kl)
 
 여러 개의 주사위를 굴린 뒤, 상위/하위 N개만 선택해 합산합니다.
@@ -153,6 +166,21 @@ rollDiceExpression('3d6kl1');     // 하위 1개만 선택
 **한국어:** `khN`은 상위 N개, `klN`은 하위 N개를 유지합니다.
 
 **English:** `khN` keeps the highest N dice, `klN` keeps the lowest N dice.
+
+### FVTT Keep/Drop Shorthand
+
+Foundry VTT 스타일 축약 keep/drop 문법도 지원합니다.
+
+```typescript
+rollDiceExpression('4d6k');       // 상위 1개만 유지
+rollDiceExpression('4d6d');       // 하위 1개 버림
+rollDiceExpression('4d6kl');      // 하위 1개만 유지
+rollDiceExpression('4d6dh');      // 상위 1개 버림
+```
+
+**한국어:** `k`, `kl`, `d`, `dh`처럼 개수를 생략한 FVTT 축약형은 기본값 `1`로 처리됩니다.
+
+**English:** FVTT shorthand forms like `k`, `kl`, `d`, and `dh` default to a count of `1`.
 
 ### Drop Highest/Lowest (dh/dl)
 
@@ -172,34 +200,54 @@ rollDiceExpression('5d8dl2');    // 하위 2개를 버림
 
 ### Reroll (r)
 
-조건을 만족하면 해당 눈이 아닐 때까지 계속 다시 굴립니다.
+Foundry VTT 기준으로 조건을 만족하면 단 한 번 다시 굴립니다.
 
-Keeps rerolling until the condition is not met.
+Rerolls only once when the condition is met, following Foundry VTT semantics.
 
 ```typescript
-rollDiceExpression('1d20r1');      // 1이 나오면 1이 아닐 때까지 다시 굴림
-rollDiceExpression('1d6r<=2');      // 1, 2가 나오면 3 이상 나올 때까지 다시 굴림
-rollDiceExpression('2d10r<5');     // 4 이하가 나오면 5 이상 나올 때까지 다시 굴림
+rollDiceExpression('1d20r1');      // 1이 나오면 한 번만 다시 굴림
+rollDiceExpression('1d6r<=2');     // 1, 2가 나오면 한 번만 다시 굴림
+rollDiceExpression('2d10r<5');     // 4 이하가 나오면 한 번만 다시 굴림
 ```
 
 **한국어:** `rN`, `r<=N`, `r>=N`, `r<N`, `r>N` 형태로 조건을 지정할 수 있습니다.
 
 **English:** You can specify conditions with `rN`, `r<=N`, `r>=N`, `r<N`, `r>N` formats.
 
-### Reroll Once (ro)
+### Recursive Reroll (rr)
 
-조건을 만족하면 단 한 번만 다시 굴립니다.
+조건을 만족하면 더 이상 조건을 만족하지 않을 때까지 계속 다시 굴립니다.
 
-Rerolls only once when the condition is met.
+Keeps rerolling until the condition is not met.
 
 ```typescript
-rollDiceExpression('1d20ro1');     // 1이 나오면 한 번만 다시 굴림
-rollDiceExpression('2d6ro<2');     // 1이 나오면 한 번만 다시 굴림
+rollDiceExpression('1d20rr1');     // 1이 나오면 1이 아닐 때까지 다시 굴림
+rollDiceExpression('2d6rr<2');     // 1이 나오면 2 이상이 나올 때까지 다시 굴림
 ```
 
-**한국어:** `roN`, `ro<=N`, `ro>=N`, `ro<N`, `ro>N` 형태로 조건을 지정할 수 있습니다.
+**한국어:** `rrN`, `rr<=N`, `rr>=N`, `rr<N`, `rr>N` 형태로 조건을 지정할 수 있습니다. 기존 `ro` 문법은 제거되었습니다.
 
-**English:** You can specify conditions with `roN`, `ro<=N`, `ro>=N`, `ro<N`, `ro>N` formats.
+**English:** Use `rrN`, `rr<=N`, `rr>=N`, `rr<N`, `rr>N` for recursive rerolls. Legacy `ro` has been removed.
+
+### FVTT Success Modifiers
+
+Foundry VTT 스타일 success-family modifier 일부를 지원합니다.
+
+```typescript
+rollDiceExpression('5d10cs>=8');      // 성공 개수
+rollDiceExpression('3d10cs');         // 최대 눈(10)만 성공으로 간주
+rollDiceExpression('4d6cf');          // 기본 실패값(1)의 개수
+rollDiceExpression('4d6df');          // 기본 실패값(1)을 차감
+rollDiceExpression('3d6sf<3');        // 실패한 눈의 값을 합계에서 차감
+rollDiceExpression('3d6ms>10');       // 총합 - 목표값
+rollDiceExpression('4d6even');        // 짝수 눈 개수
+rollDiceExpression('4d6odd');         // 홀수 눈 개수
+rollDiceExpression('4d6min2rr1kh3');  // modifier 조합 예시
+```
+
+**한국어:** 현재 `cs`, `cf`, `df`, `sf`, `ms`, `min`, `max`, `even`, `odd`를 지원하며 `kh`, `kl`, `dh`, `dl`, `r`, `rr`, `x`, `xo`와 같은 블록 안에서 조합할 수 있습니다. `cs`, `cf`, `df`는 비교식이 없으면 기본값 `=최대눈`, `=1`, `=1`을 사용합니다.
+
+**English:** The parser supports `cs`, `cf`, `df`, `sf`, `ms`, `min`, `max`, `even`, and `odd`, and they can be mixed with `kh`, `kl`, `dh`, `dl`, `r`, `rr`, `x`, and `xo` in the same block. If no comparison is provided, `cs`, `cf`, and `df` default to `=max`, `=1`, and `=1`.
 
 ### Success (>N, >=N, =N, <N)
 
@@ -296,20 +344,20 @@ rollDiceExpression('d6 d8 d10');      // 세 개의 주사위식
 
 **English:** If there's no space, it's treated as a single expression. If there are spaces, it's split into multiple expressions. Each expression is calculated independently and returned as an array.
 
-### 괄호 우선순위 / Parentheses Priority
+### 지원 범위 주의 / Current Expression Scope
 
-괄호를 사용하여 우선순위를 지정할 수 있습니다.
+현재 공개 API는 주사위 블록과 `+N`, `-N` 보정치 조합에 집중되어 있습니다.
 
-You can use parentheses to specify priority.
+The current public API focuses on dice blocks plus numeric `+N` and `-N` modifiers.
 
 ```typescript
-rollDiceExpression('d20+(2d6+3)');     // d20 + (2d6 + 3)
-rollDiceExpression('(3d6+2)*2');       // 괄호 내부 먼저 계산
+rollDiceExpression('d20+5+4d6rr1kh3');  // 지원
+rollDiceExpression('5d10cs>=8+2');      // 지원
 ```
 
-**한국어:** 괄호 내부 표현식이 가장 최우선으로 평가됩니다.
+**한국어:** 괄호 우선순위나 일반 산술 연산자(`*`, `/`)는 현재 공식 지원 범위가 아닙니다.
 
-**English:** Expressions inside parentheses are evaluated with highest priority.
+**English:** Parenthetical precedence and general arithmetic operators like `*` and `/` are not part of the current supported public syntax.
 
 ## API 문서 / API Documentation
 
@@ -408,7 +456,7 @@ console.log(disadvantage[0].total);  // 예: 8
 
 ```typescript
 // 여러 주사위와 보정치
-const complex = rollDiceExpression('d20+5+4d20kl2+10d50ro1');
+const complex = rollDiceExpression('d20+5+4d20kl2+10d50r1');
 console.log(complex[0].total);
 console.log(complex[0].rollDetails);  // 각 블록별 상세 정보
 console.log(complex[0].modifiers);    // 보정치 배열
@@ -426,6 +474,10 @@ console.log(multiple[1].total);  // 두 번째 주사위식 결과
 // 성공 개수
 const successes = rollDiceExpression('5d10>7');
 console.log(successes[0].total);  // 성공 개수
+
+// FVTT success-family modifier
+const fvttSuccess = rollDiceExpression('5d10cs>=8');
+console.log(fvttSuccess[0].total);  // 성공 개수
 
 // 순성공 (성공 - 실패)
 const netSuccess = rollDiceExpression('5d10>8f1');

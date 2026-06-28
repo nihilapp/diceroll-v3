@@ -89,13 +89,16 @@ export type DiceExpressionLegacyResults = DiceExpressionLegacyResult[];
 export type RollKind
   = 'basic' | 'compound' | 'explode' | 'keepHighest' | 'keepLowest'
     | 'dropHighest' | 'dropLowest' | 'reroll' | 'rerollOnce'
-    | 'success' | 'netSuccess' | 'percentile' | 'fate';
+    | 'success' | 'netSuccess' | 'percentile' | 'fate' | 'explodeOnce'
+    | 'countFailure' | 'deductFailures' | 'subtractFailureFaces'
+    | 'marginSuccess' | 'countEven' | 'countOdd';
 
 export type RollBasicResult = BasicDiceRollResult & { kind: 'basic' };
 export type RollCompoundResult = BasicDiceRollResult & { kind: 'compound' };
 export type RollDropHighestResult = KeepDropRollResult & { kind: 'dropHighest' };
 export type RollDropLowestResult = KeepDropRollResult & { kind: 'dropLowest' };
 export type RollExplodeResult = BasicDiceRollResult & { kind: 'explode' };
+export type RollExplodeOnceResult = BasicDiceRollResult & { kind: 'explodeOnce' };
 export type RollFateResult = FateRollResult & { kind: 'fate' };
 export type RollKeepHighestResult = KeepDropRollResult & { kind: 'keepHighest' };
 export type RollKeepLowestResult = KeepDropRollResult & { kind: 'keepLowest' };
@@ -104,13 +107,27 @@ export type RollPercentileResult = DiceRollResult & { kind: 'percentile' };
 export type RollRerollResult = BasicDiceRollResult & { kind: 'reroll' };
 export type RollRerollOnceResult = BasicDiceRollResult & { kind: 'rerollOnce' };
 export type RollSuccessResult = SuccessRollResult & { kind: 'success' };
+export type RollCountFailureResult = SuccessRollResult & { kind: 'countFailure' };
+export type RollDeductFailuresResult = NetSuccessRollResult & { kind: 'deductFailures' };
+export type RollSubtractFailureFacesResult = BasicDiceRollResult & {
+  kind: 'subtractFailureFaces';
+  failureSum: number;
+};
+export type RollMarginSuccessResult = BasicDiceRollResult & {
+  kind: 'marginSuccess';
+  target: number;
+};
+export type RollCountEvenResult = SuccessRollResult & { kind: 'countEven' };
+export type RollCountOddResult = SuccessRollResult & { kind: 'countOdd' };
 
 /** 모든 roll 함수 반환 타입의 합집합 (discriminated union) */
 export type RollResult
   = RollBasicResult | RollCompoundResult | RollDropHighestResult | RollDropLowestResult
-    | RollExplodeResult | RollFateResult | RollKeepHighestResult | RollKeepLowestResult
+    | RollExplodeResult | RollExplodeOnceResult | RollFateResult | RollKeepHighestResult | RollKeepLowestResult
     | RollNetSuccessResult | RollPercentileResult | RollRerollResult | RollRerollOnceResult
-    | RollSuccessResult;
+    | RollSuccessResult | RollCountFailureResult | RollDeductFailuresResult
+    | RollSubtractFailureFacesResult | RollMarginSuccessResult
+    | RollCountEvenResult | RollCountOddResult;
 
 /** 보정치 한 항 (부호 + 숫자) */
 export type ModifierEntry = {

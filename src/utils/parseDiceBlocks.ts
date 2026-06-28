@@ -1,4 +1,6 @@
+import type { ComparisonPredicate, DiceTermSpec } from './diceModifierTypes';
 import { normalizeDiceSymbols } from './parseDiceExpression';
+import { parseDiceModifiers } from './parseDiceModifiers';
 
 /** 파싱된 항: 보정치(숫자) 또는 주사위 블록 */
 export type ParsedTerm
@@ -35,7 +37,7 @@ export function parseTerms(expression: string): ParsedTerm[] {
     }
 
     // D로 시작하는 주사위 블록 (개수 없음: D20, D%, DF 등)
-    if (normalized[i] === 'D') {
+    if (/[Dd]/.test(normalized[i])) {
       const block = readOneDiceBlock(normalized, i);
       i = block.endIndex;
       terms.push({
@@ -56,7 +58,7 @@ export function parseTerms(expression: string): ParsedTerm[] {
       const numStr = normalized.slice(start, i);
 
       // 바로 뒤가 D면 주사위 블록의 일부 (개수). 블록 전체를 읽어야 함
-      if (i < normalized.length && normalized[i] === 'D') {
+      if (i < normalized.length && /[Dd]/.test(normalized[i])) {
         // 주사위 블록: "3D20kl2" 형태. 숫자 + D + ... 를 한 덩어리로
         i = start; // 다시 처음부터 (개수 포함)
         const block = readOneDiceBlock(normalized, i);
@@ -101,7 +103,7 @@ function readOneDiceBlock(expr: string, start: number): { block: string;
     i++;
   }
 
-  if (i >= expr.length || expr[i] !== 'D') {
+  if (i >= expr.length || !/[Dd]/.test(expr[i])) {
     return {
       block: '',
       endIndex: start,
@@ -140,8 +142,15 @@ function readOneDiceBlock(expr: string, start: number): { block: string;
   while (i < expr.length) {
     const rest = expr.slice(i);
     // 2글자 이상 접미사 우선
-    if (/^kl\d+/.test(rest) || /^kh\d+/.test(rest) || /^dh\d+/.test(rest) || /^dl\d+/.test(rest)) {
-      const match = rest.match(/^(kl|kh|dh|dl)(\d+)/);
+    if (/^rr[<=>]*\d+/.test(rest)) {
+      const match = rest.match(/^rr([<=>]*)(\d+)/);
+      if (match) {
+        i += match[0].length;
+        continue;
+      }
+    }
+    if (/^ro[<=>]*\d+/.test(rest)) {
+      const match = rest.match(/^ro([<=>]*)(\d+)/);
       if (match) {
         i += match[0].length;
         continue;
@@ -161,12 +170,48 @@ function readOneDiceBlock(expr: string, start: number): { block: string;
         continue;
       }
     }
-    if (/^ro[<=>]*\d+/.test(rest)) {
-      const match = rest.match(/^ro([<=>]*)(\d+)/);
+    if (/^xo/.test(rest)) {
+      const match = rest.match(/^xo/);
       if (match) {
         i += match[0].length;
         continue;
       }
+    }
+    if (/^x/.test(rest)) {
+      const match = rest.match(/^x/);
+      if (match) {
+        i += match[0].length;
+        continue;
+      }
+    }
+    if (/^(cs|cf|df|sf|ms)([><]=|[><=])?\d*/.test(rest)) {
+      const match = rest.match(/^(cs|cf|df|sf|ms)([><]=|[><=])?\d*/);
+      if (match) {
+        i += match[0].length;
+        continue;
+      }
+    }
+    if (/^(kh|kl|dh|dl|k|d)\d*/.test(rest)) {
+      const match = rest.match(/^(kh|kl|dh|dl|k|d)(\d*)/);
+      if (match) {
+        i += match[0].length;
+        continue;
+      }
+    }
+    if (/^(min|max)\d+/.test(rest)) {
+      const match = rest.match(/^(min|max)\d+/);
+      if (match) {
+        i += match[0].length;
+        continue;
+      }
+    }
+    if (/^even/.test(rest)) {
+      i += 4;
+      continue;
+    }
+    if (/^odd/.test(rest)) {
+      i += 3;
+      continue;
     }
     if (/^r[<=>]*\d+/.test(rest)) {
       const match = rest.match(/^r([<=>]*)(\d+)/);
@@ -195,7 +240,7 @@ function readOneDiceBlock(expr: string, start: number): { block: string;
   }
 
   return {
-    block: expr.slice(start, i),
+    block: expr.slice(start, i).replace(/^(\d*)d/i, '$1D'),
     endIndex: i,
   };
 }
@@ -232,23 +277,24 @@ export type DiceBlockSpec
                 | { kind: 'reroll';
                   count: number;
                   sides: number;
-                  predicate: (r: number) => boolean; }
+                  predicate: ComparisonPredicate; }
                   | { kind: 'rerollOnce';
                     count: number;
                     sides: number;
-                    predicate: (r: number) => boolean; }
+                    predicate: ComparisonPredicate; }
                     | { kind: 'success';
                       count: number;
                       sides: number;
-                      predicate: (r: number) => boolean; }
+                      predicate: ComparisonPredicate; }
                       | { kind: 'netSuccess';
                         count: number;
                         sides: number;
-                        successPred: (r: number) => boolean;
-                        failurePred: (r: number) => boolean; }
+                        successPred: ComparisonPredicate;
+                        failurePred: ComparisonPredicate; }
                         | { kind: 'percentile' }
                         | { kind: 'fate';
-                          count: number; };
+                          count: number; }
+                          | DiceTermSpec;
 
 /**
  * 주사위 블록 문자열을 스펙으로 파싱
@@ -286,107 +332,30 @@ export function parseDiceBlockSpec(block: string): DiceBlockSpec | null {
 
   if (suffix === '') {
     return {
-      kind: 'basic',
+      notation: b,
       count,
       sides,
+      modifiers: [],
     };
   }
 
-  const khMatch = suffix.match(/^kh(\d+)$/);
-  if (khMatch) {
-    return {
-      kind: 'keepHighest',
-      count,
-      sides,
-      keep: parseInt(khMatch[1], 10),
-    };
-  }
-  const klMatch = suffix.match(/^kl(\d+)$/);
-  if (klMatch) {
-    return {
-      kind: 'keepLowest',
-      count,
-      sides,
-      keep: parseInt(klMatch[1], 10),
-    };
-  }
-  const dhMatch = suffix.match(/^dh(\d+)$/);
-  if (dhMatch) {
-    return {
-      kind: 'dropHighest',
-      count,
-      sides,
-      drop: parseInt(dhMatch[1], 10),
-    };
-  }
-  const dlMatch = suffix.match(/^dl(\d+)$/);
-  if (dlMatch) {
-    return {
-      kind: 'dropLowest',
-      count,
-      sides,
-      drop: parseInt(dlMatch[1], 10),
-    };
-  }
-
-  if (/^!!>?(\d*)$/.test(suffix)) {
-    const t = suffix.match(/^!!>?(\d*)$/);
-    const threshold = t && t[1]
-      ? parseInt(t[1], 10)
-      : sides;
-    return {
-      kind: 'compound',
-      count,
-      sides,
-      threshold,
-    };
-  }
-  if (/^!>?(\d*)$/.test(suffix)) {
-    const t = suffix.match(/^!>?(\d*)$/);
-    const threshold = t && t[1]
-      ? parseInt(t[1], 10)
-      : sides;
-    return {
-      kind: 'explode',
-      count,
-      sides,
-      threshold,
-    };
-  }
-
-  const roMatch = suffix.match(/^ro([<=>]*)(\d+)$/);
-  if (roMatch) {
-    const pred = makePredicate(roMatch[1], parseInt(roMatch[2], 10));
-    return {
-      kind: 'rerollOnce',
-      count,
-      sides,
-      predicate: pred,
-    };
-  }
-  const rMatch = suffix.match(/^r([<=>]*)(\d+)$/);
-  if (rMatch) {
-    const pred = makePredicate(rMatch[1], parseInt(rMatch[2], 10));
-    return {
-      kind: 'reroll',
-      count,
-      sides,
-      predicate: pred,
-    };
-  }
-
-  const netMatch = suffix.match(/^>(\d+)f([<=>]*)(\d+)$/);
-  if (netMatch) {
-    const successN = parseInt(netMatch[1], 10);
-    const failureN = parseInt(netMatch[3], 10);
-    const failOp = netMatch[2] || '=';
-    return {
-      kind: 'netSuccess',
-      count,
-      sides,
-      successPred: (r: number) => r > successN,
-      failurePred: makePredicate(failOp, failureN),
-    };
+  if (/^>\d+f[<=>]*\d+$/.test(suffix)) {
+    const netMatch = suffix.match(/^>(\d+)f([<=>]*)(\d+)$/);
+    if (netMatch) {
+      const successN = parseInt(netMatch[1], 10);
+      const failureN = parseInt(netMatch[3], 10);
+      const failOp = netMatch[2] || '=';
+      return {
+        kind: 'netSuccess',
+        count,
+        sides,
+        successPred: {
+          op: '>',
+          value: successN,
+        },
+        failurePred: makePredicate(failOp, failureN),
+      };
+    }
   }
 
   const succMatch = suffix.match(/^([>=<]+)(\d+)$/);
@@ -401,17 +370,46 @@ export function parseDiceBlockSpec(block: string): DiceBlockSpec | null {
   }
 
   return {
-    kind: 'basic',
+    notation: b,
     count,
     sides,
+    modifiers: parseDiceModifiers(suffix, sides),
   };
 }
 
-function makePredicate(op: string, n: number): (r: number) => boolean {
-  if (op === '' || op === '=') return (r: number) => r === n;
-  if (op === '>') return (r: number) => r > n;
-  if (op === '>=') return (r: number) => r >= n;
-  if (op === '<') return (r: number) => r < n;
-  if (op === '<=') return (r: number) => r <= n;
-  return (r: number) => r === n;
+function makePredicate(op: string, n: number): ComparisonPredicate {
+  if (op === '' || op === '=') {
+    return {
+      op: '=',
+      value: n,
+    };
+  }
+  if (op === '>') {
+    return {
+      op: '>',
+      value: n,
+    };
+  }
+  if (op === '>=') {
+    return {
+      op: '>=',
+      value: n,
+    };
+  }
+  if (op === '<') {
+    return {
+      op: '<',
+      value: n,
+    };
+  }
+  if (op === '<=') {
+    return {
+      op: '<=',
+      value: n,
+    };
+  }
+  return {
+    op: '=',
+    value: n,
+  };
 }

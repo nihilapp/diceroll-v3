@@ -1,10 +1,11 @@
 import type { Token } from '../types';
 
 /**
- * 다이스 기호 통일: D, d, ㅇ 모두 D로 변환
+ * 한글 다이스 기호만 통일합니다.
+ * 영문 d/D 는 파서가 문맥으로 구분합니다.
  */
 export function normalizeDiceSymbols(input: string): string {
-  return input.replace(/[Ddㅇ]/g, 'D');
+  return input.replace(/ㅇ/g, 'D');
 }
 
 /**
@@ -63,7 +64,7 @@ export function tokenize(expression: string): Token[] {
     }
 
     // 주사위 패턴: (\d*)D(\d+)
-    if (expression[i] === 'D') {
+    if (/[Ddㅇ]/.test(expression[i])) {
       // 앞의 개수 파싱 (없으면 1)
       let count = 1;
       let countStart = i - 1;
@@ -109,7 +110,7 @@ export function tokenize(expression: string): Token[] {
       }
 
       // 바로 뒤에 D가 오는지 확인
-      if (numEnd < len && expression[numEnd] === 'D') {
+      if (numEnd < len && /[Ddㅇ]/.test(expression[numEnd])) {
         // 주사위 개수이므로 여기서 처리하지 않고 D를 만날 때 처리
         i = numEnd;
         continue;
