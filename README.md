@@ -145,11 +145,14 @@ Foundry VTT 스타일 explode 문법도 지원합니다.
 ```typescript
 rollDiceExpression('1d6x');      // 폭발 굴림
 rollDiceExpression('1d6xo');     // 한 번만 폭발
+rollDiceExpression('1d10x<=5');  // 5 이하가 나오면 계속 폭발
+rollDiceExpression('1d10x5');    // 기본 폭발 조건으로 최대 5회까지 폭발
+rollDiceExpression('1d10x2>=9'); // 9 이상이면 폭발, 최대 2회까지
 ```
 
-**한국어:** 기존 `!`, `!!` 문법은 유지되며 `x`, `xo`와 병행 지원됩니다.
+**한국어:** 기존 `!`, `!!` 문법은 유지되며 `x`, `xo`와 병행 지원됩니다. `x`, `xo`는 `=N`, `<=N`, `>=N`, `<N`, `>N` 비교식을 받을 수 있고, `x`는 숫자를 바로 붙여 explode 최대 횟수 cap도 지정할 수 있습니다. 예: `x5`, `x2>=9`
 
-**English:** Legacy `!`, `!!` syntax is preserved and can be used alongside `x`, `xo`.
+**English:** Legacy `!`, `!!` syntax is preserved and can be used alongside `x` and `xo`. Both support comparison predicates such as `=N`, `<=N`, `>=N`, `<N`, and `>N`, and `x` also supports a numeric explode cap such as `x5` or `x2>=9`.
 
 ### Keep Highest/Lowest (kh/kl)
 
@@ -245,9 +248,9 @@ rollDiceExpression('4d6odd');         // 홀수 눈 개수
 rollDiceExpression('4d6min2rr1kh3');  // modifier 조합 예시
 ```
 
-**한국어:** 현재 `cs`, `cf`, `df`, `sf`, `ms`, `min`, `max`, `even`, `odd`를 지원하며 `kh`, `kl`, `dh`, `dl`, `r`, `rr`, `x`, `xo`와 같은 블록 안에서 조합할 수 있습니다. `cs`, `cf`, `df`는 비교식이 없으면 기본값 `=최대눈`, `=1`, `=1`을 사용합니다.
+**한국어:** 현재 `cs`, `cf`, `df`, `sf`, `ms`, `min`, `max`, `even`, `odd`를 지원하며 `kh`, `kl`, `dh`, `dl`, `r`, `rr`, `x`, `xo`와 같은 블록 안에서 조합할 수 있습니다. `min`, `max`는 `min2`, `max8`처럼 숫자를 바로 붙이는 형태를 사용합니다. `cs`, `cf`, `df`는 비교식이 없으면 기본값 `=최대눈`, `=1`, `=1`을 사용합니다.
 
-**English:** The parser supports `cs`, `cf`, `df`, `sf`, `ms`, `min`, `max`, `even`, and `odd`, and they can be mixed with `kh`, `kl`, `dh`, `dl`, `r`, `rr`, `x`, and `xo` in the same block. If no comparison is provided, `cs`, `cf`, and `df` default to `=max`, `=1`, and `=1`.
+**English:** The parser supports `cs`, `cf`, `df`, `sf`, `ms`, `min`, `max`, `even`, and `odd`, and they can be mixed with `kh`, `kl`, `dh`, `dl`, `r`, `rr`, `x`, and `xo` in the same block. `min` and `max` use direct numeric suffixes such as `min2` and `max8`. If no comparison is provided, `cs`, `cf`, and `df` default to `=max`, `=1`, and `=1`.
 
 ### Success (>N, >=N, =N, <N)
 

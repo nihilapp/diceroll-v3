@@ -35,6 +35,7 @@ export type DiceModifierSpec
   | {
     kind: 'explode';
     predicate?: ComparisonPredicate;
+    limit?: number;
     source: 'bang' | 'fvtt-x';
   }
   | {

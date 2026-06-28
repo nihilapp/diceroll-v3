@@ -98,7 +98,11 @@ function executeDiceTermSpec(spec: DiceTermSpec): {
         for (const roll of current) {
           let probe = roll;
           let iterations = 0;
-          while (probe.result >= spec.sides && iterations < 1000) {
+          const limit = modifier.limit ?? 1000;
+          while (compare(probe.result, modifier.predicate || {
+            op: '=',
+            value: spec.sides,
+          }) && iterations < limit) {
             probe = rollSingle(spec.sides);
             nextRolls.push(probe);
             iterations++;
@@ -111,7 +115,10 @@ function executeDiceTermSpec(spec: DiceTermSpec): {
       case 'explodeOnce': {
         const nextRolls = [ ...current, ];
         for (const roll of current) {
-          if (roll.result >= spec.sides) {
+          if (compare(roll.result, modifier.predicate || {
+            op: '=',
+            value: spec.sides,
+          })) {
             nextRolls.push(rollSingle(spec.sides));
           }
         }

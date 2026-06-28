@@ -70,22 +70,41 @@ function readOneModifier(rest: string, sides: number): { modifier: DiceModifierS
   }
 
   if (rest.startsWith('xo')) {
+    const comparison = readComparison(rest.slice(2));
     return {
-      modifier: {
-        kind: 'explodeOnce',
-        source: 'fvtt-xo',
-      },
-      length: 2,
+      modifier: comparison
+        ? {
+          kind: 'explodeOnce',
+          predicate: comparison.predicate,
+          source: 'fvtt-xo',
+        }
+        : {
+          kind: 'explodeOnce',
+          source: 'fvtt-xo',
+        },
+      length: 2 + (comparison?.length || 0),
     };
   }
 
   if (rest.startsWith('x')) {
+    const capMatch = rest.slice(1).match(/^(\d+)/);
+    const limit = capMatch
+      ? parseInt(capMatch[1], 10)
+      : undefined;
+    const comparisonOffset = capMatch?.[1].length || 0;
+    const comparison = readComparison(rest.slice(1 + comparisonOffset));
     return {
       modifier: {
         kind: 'explode',
+        ...(comparison
+          ? { predicate: comparison.predicate, }
+          : {}),
+        ...(limit !== undefined
+          ? { limit, }
+          : {}),
         source: 'fvtt-x',
       },
-      length: 1,
+      length: 1 + comparisonOffset + (comparison?.length || 0),
     };
   }
 

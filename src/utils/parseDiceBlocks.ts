@@ -19,15 +19,37 @@ export function parseTerms(expression: string): ParsedTerm[] {
   const terms: ParsedTerm[] = [];
   let i = 0;
   let sign: '+' | '-' = '+';
+  let signExplicit = false;
+
+  const nextNonWhitespaceIndex = (start: number): number => {
+    let cursor = start;
+    while (cursor < normalized.length && /\s/.test(normalized[cursor])) {
+      cursor++;
+    }
+    return cursor;
+  };
+
+  const assertTermBoundary = (start: number, kind: 'dice block' | 'modifier'): void => {
+    const boundaryIndex = nextNonWhitespaceIndex(start);
+    if (boundaryIndex >= normalized.length) {
+      return;
+    }
+    if (normalized[boundaryIndex] === '+' || normalized[boundaryIndex] === '-') {
+      return;
+    }
+    throw new Error(`Unexpected token '${normalized[boundaryIndex]}' after ${kind} at position ${boundaryIndex}`);
+  };
 
   while (i < normalized.length) {
     if (normalized[i] === '+') {
       sign = '+';
+      signExplicit = true;
       i++;
       continue;
     }
     if (normalized[i] === '-') {
       sign = '-';
+      signExplicit = true;
       i++;
       continue;
     }
@@ -46,6 +68,8 @@ export function parseTerms(expression: string): ParsedTerm[] {
         block: block.block,
       });
       sign = '+';
+      signExplicit = false;
+      assertTermBoundary(i, 'dice block');
       continue;
     }
 
@@ -69,7 +93,13 @@ export function parseTerms(expression: string): ParsedTerm[] {
           block: block.block,
         });
         sign = '+';
+        signExplicit = false;
+        assertTermBoundary(i, 'dice block');
         continue;
+      }
+
+      if (!signExplicit) {
+        throw new Error(`Numeric modifiers must use explicit +N or -N syntax at position ${start}`);
       }
 
       // 순수 숫자 → 보정치 (i는 이미 숫자 끝으로 진행됨)
@@ -82,10 +112,12 @@ export function parseTerms(expression: string): ParsedTerm[] {
         });
       }
       sign = '+';
+      signExplicit = false;
+      assertTermBoundary(i, 'modifier');
       continue;
     }
 
-    i++;
+    throw new Error(`Unexpected character '${normalized[i]}' at position ${i}`);
   }
 
   return terms;
@@ -170,15 +202,15 @@ function readOneDiceBlock(expr: string, start: number): { block: string;
         continue;
       }
     }
-    if (/^xo/.test(rest)) {
-      const match = rest.match(/^xo/);
+    if (/^xo(?:(?:[><]=|[><=])?\d+)?/.test(rest)) {
+      const match = rest.match(/^xo(?:(?:[><]=|[><=])?\d+)?/);
       if (match) {
         i += match[0].length;
         continue;
       }
     }
-    if (/^x/.test(rest)) {
-      const match = rest.match(/^x/);
+    if (/^x(?:(?:[><]=|[><=])?\d+)?/.test(rest)) {
+      const match = rest.match(/^x(?:(?:[><]=|[><=])?\d+)?/);
       if (match) {
         i += match[0].length;
         continue;

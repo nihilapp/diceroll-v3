@@ -50,6 +50,28 @@ describe('FVTT explode compatibility', () => {
         },
       ],
     });
+    expect(parseDiceBlockSpec('2D6x5')).toMatchObject({
+      modifiers: [
+        {
+          kind: 'explode',
+          limit: 5,
+          source: 'fvtt-x',
+        },
+      ],
+    });
+    expect(parseDiceBlockSpec('2D10x2>=9')).toMatchObject({
+      modifiers: [
+        {
+          kind: 'explode',
+          limit: 2,
+          predicate: {
+            op: '>=',
+            value: 9,
+          },
+          source: 'fvtt-x',
+        },
+      ],
+    });
   });
 
   it('supports x through public API', () => {
@@ -71,5 +93,43 @@ describe('FVTT explode compatibility', () => {
     const [ result, ] = rollDiceExpression('1d6xo');
     expect(result.rollDetails[0].kind).toBe('explodeOnce');
     expect(result.total).toBe(8);
+  });
+
+  it('does not treat x numeric caps as numeric modifiers', () => {
+    mockRandomSequence([ 0.83, ]);
+    const [ result, ] = rollDiceExpression('1d6x5');
+    expect(result.modifiers).toEqual([]);
+    expect(result.rollDetails[0]).toMatchObject({
+      block: '1D6x5',
+      kind: 'explode',
+      contribution: 5,
+    });
+    expect(result.total).toBe(5);
+  });
+
+  it('still allows explicit numeric modifiers after explode blocks', () => {
+    const [ result, ] = rollDiceExpression('1d6x5+5');
+    expect(result.rollDetails[0].block).toBe('1D6x5');
+    expect(result.modifiers).toEqual([
+      {
+        sign: '+',
+        value: 5,
+      },
+    ]);
+  });
+
+  it('supports chained comparison explode plus min modifiers through public API', () => {
+    mockRandomSequence([
+      0.16,
+      0.99,
+    ]);
+    const [ result, ] = rollDiceExpression('1d6x<=5min5');
+    expect(result.modifiers).toEqual([]);
+    expect(result.rollDetails[0]).toMatchObject({
+      block: '1D6x<=5min5',
+      kind: 'explode',
+      contribution: 11,
+    });
+    expect(result.total).toBe(11);
   });
 });
